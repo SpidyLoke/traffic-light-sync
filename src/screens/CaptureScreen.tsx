@@ -127,7 +127,7 @@ export function CaptureScreen() {
               role="radio"
               aria-checked={dirOverride === d}
               onClick={() => setDirOverride(d)}
-              className={`min-h-11 rounded-xl border-2 font-bold ${dirOverride === d ? 'border-accent bg-accent text-on-accent' : 'border-line text-fg'}`}
+              className={`press chip min-h-11 rounded-xl border-2 font-bold ${dirOverride === d ? 'border-accent bg-accent text-on-accent' : 'border-line text-fg'}`}
             >
               {d === 'auto' ? 'Auto dir' : d === 'fwd' ? '→ Fwd' : '← Rev'}
             </button>
@@ -135,24 +135,24 @@ export function CaptureScreen() {
         </div>
       </Card>
 
-      <div className="grid grid-cols-2 gap-3" style={{ height: 'min(50vh, 440px)', minHeight: 280 }}>
+      <div className="grid grid-cols-2 gap-3" style={{ height: 'min(50vh, 27.5rem)', minHeight: '17.5rem' }}>
         {BUTTONS.map((b) => (
           <button
             key={b.kind}
             type="button"
             onPointerDown={(e) => tap(b.kind, e)}
             onContextMenu={(e) => e.preventDefault()}
-            className={`flex select-none flex-col items-center justify-center rounded-3xl border-4 active:scale-[0.96] ${b.cls}`}
+            className={`flex select-none flex-col items-center justify-center press-fast rounded-3xl border-4 ${b.cls}`}
           >
             <span className="text-xl font-bold leading-tight">{b.title}</span>
-            <span className="text-4xl font-black leading-tight">{b.sub}</span>
+            <span className="t-hero text-4xl font-black">{b.sub}</span>
           </button>
         ))}
       </div>
       <p className="mt-2 text-center text-sm text-muted">Amber counts as red. Tap the moment it changes.</p>
 
       {error && (
-        <div role="alert" className="mt-3 rounded-2xl border-4 border-stop p-3 text-lg font-bold text-stop">
+        <div role="alert" className="enter mt-3 rounded-(--radius-lg) border-4 border-stop p-3 text-lg font-bold text-stop">
           {error}
         </div>
       )}
@@ -165,7 +165,7 @@ export function CaptureScreen() {
             const chain = light ? orderedLights(lights, light.roadId) : [];
             const flip = (d: Direction) => data.setObservationDirection(o.id, d);
             return (
-              <Card key={o.id} className={i === 0 ? 'border-accent' : 'opacity-80'}>
+              <Card key={o.id} className={`enter ${i === 0 ? 'border-accent' : 'opacity-80'}`}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className={`text-lg font-extrabold ${o.kind.endsWith('Green') ? 'text-go' : 'text-stop'}`}>
@@ -186,7 +186,7 @@ export function CaptureScreen() {
                       key={d}
                       type="button"
                       onClick={() => flip(d)}
-                      className={`min-h-11 truncate rounded-xl border-2 px-2 text-sm font-bold ${
+                      className={`press chip min-h-11 truncate rounded-xl border-2 px-2 text-sm font-bold ${
                         o.direction === d ? 'border-accent bg-accent text-on-accent' : 'border-line text-muted'
                       }`}
                     >
