@@ -44,7 +44,7 @@ export default function App() {
         {route.name === 'light' && <LightDebugScreen id={route.id} />}
         {route.name === 'settings' && <SettingsScreen />}
       </main>
-      <nav className="fixed inset-x-0 bottom-0 z-20 border-t-2 border-line bg-bg safe-bottom">
+      <nav className="material-bar fixed inset-x-0 bottom-0 z-20 safe-bottom">
         <div className="mx-auto grid max-w-xl grid-cols-4">
           {TABS.map((t) => {
             const on = t.route.name === active;
@@ -52,7 +52,7 @@ export default function App() {
               <a
                 key={t.label}
                 href={href(t.route)}
-                className={`flex flex-col items-center py-2.5 text-sm font-bold ${on ? 'text-accent' : 'text-muted'}`}
+                className={`press flex flex-col items-center py-2.5 text-sm font-bold ${on ? 'text-accent' : 'text-muted'}`}
               >
                 <span className="text-xl leading-none" aria-hidden>
                   {t.icon}

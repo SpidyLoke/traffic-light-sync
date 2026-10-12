@@ -5,9 +5,9 @@ import { STATE_LABEL } from '../lib/model/predict';
 
 export function Screen({ title, right, children }: { title: string; right?: ReactNode; children: ReactNode }) {
   return (
-    <div className="mx-auto flex min-h-full max-w-xl flex-col px-4 pb-28 safe-top">
-      <header className="flex items-center justify-between gap-3 pt-4 pb-3">
-        <h1 className="text-2xl font-extrabold tracking-tight">{title}</h1>
+    <div className="mx-auto flex min-h-full max-w-xl flex-col px-4 pb-28">
+      <header className="material-header -mx-4 mb-1 flex items-center justify-between gap-3 px-4 pb-3">
+        <h1 className="t-title">{title}</h1>
         {right}
       </header>
       {children}
@@ -16,15 +16,15 @@ export function Screen({ title, right, children }: { title: string; right?: Reac
 }
 
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <div className={`rounded-2xl border border-line bg-surface p-4 ${className}`}>{children}</div>;
+  return <div className={`card border bg-surface p-4 ${className}`}>{children}</div>;
 }
 
 type BtnVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
 const BTN: Record<BtnVariant, string> = {
   primary: 'bg-accent text-on-accent border-accent',
-  secondary: 'bg-surface-2 text-fg border-line',
+  secondary: 'btn-secondary bg-surface-2 text-fg border-line',
   danger: 'bg-transparent text-stop border-stop',
-  ghost: 'bg-transparent text-fg border-transparent',
+  ghost: 'btn-ghost bg-transparent text-fg border-transparent',
 };
 
 export function Button({
@@ -49,7 +49,7 @@ export function Button({
       aria-label={title}
       disabled={disabled}
       onClick={onClick}
-      className={`min-h-12 rounded-xl border-2 px-4 py-2 font-bold active:scale-[0.97] disabled:opacity-40 ${BTN[variant]} ${className}`}
+      className={`press min-h-12 rounded-xl border-2 px-4 py-2 font-bold disabled:opacity-40 ${BTN[variant]} ${className}`}
     >
       {children}
     </button>
