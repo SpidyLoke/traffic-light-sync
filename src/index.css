@@ -1,11 +1,17 @@
 @import "tailwindcss";
 
-/* Colour tokens. Dark is the default; "light" is a high-contrast sunlight mode. */
+/* ── Design tokens ────────────────────────────────────────────────────────────
+   Dark is the default; data-theme="light" is the high-contrast sunlight mode
+   (set by the app's own theme setting). */
 :root {
+  /* Colour */
   --bg: #000000;
   --surface: #121214;
   --surface-2: #1f1f22;
+  --surface-raised: #2a2a2e;
   --border: #3d3d42;
+  --hairline: rgba(255, 255, 255, 0.1);
+  --highlight: rgba(255, 255, 255, 0.06);
   --fg: #ffffff;
   --muted: #b8b8be;
   --green: #30d158;
@@ -16,13 +22,64 @@
   --on-amber: #000000;
   --accent: #64d2ff;
   --on-accent: #000000;
+  --focus: #64d2ff;
+
+  /* Materials (translucent chrome) */
+  --material: rgba(0, 0, 0, 0.72);
+  --material-edge: rgba(255, 255, 255, 0.08);
+  --scroll-fade: rgba(0, 0, 0, 0.6);
+
+  /* Depth */
+  --shadow-card: inset 0 1px 0 var(--highlight);
+  --shadow-hero: inset 0 1px 0 var(--highlight), 0 12px 32px rgba(0, 0, 0, 0.5);
+  --shadow-chrome: 0 -10px 30px rgba(0, 0, 0, 0.45);
+  --shadow-header: 0 10px 24px rgba(0, 0, 0, 0.35);
+
+  /* Spacing (rem, so it scales with text size) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+
+  /* Type scale */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-title: 1.75rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+
+  /* Radii */
+  --radius-sm: 0.5rem; /* badges */
+  --radius-md: 0.75rem; /* buttons, inputs, chips */
+  --radius-lg: 1.25rem; /* cards: 0.75rem inner + ~0.5rem */
+  --radius-xl: 1.5rem; /* capture pads */
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --dur-press-fast: 100ms;
+  --dur-press: 120ms;
+  --dur-enter: 160ms;
+  --dur-panel: 200ms;
+
   color-scheme: dark;
 }
 :root[data-theme='light'] {
   --bg: #ffffff;
   --surface: #f1f1f3;
   --surface-2: #e2e2e6;
+  --surface-raised: #d6d6db;
   --border: #8a8a90;
+  --hairline: rgba(0, 0, 0, 0.12);
+  --highlight: rgba(255, 255, 255, 0.7);
   --fg: #000000;
   --muted: #2b2b30;
   --green: #00802b;
@@ -33,6 +90,17 @@
   --on-amber: #ffffff;
   --accent: #0040c8;
   --on-accent: #ffffff;
+  --focus: #0040c8;
+
+  --material: rgba(255, 255, 255, 0.72);
+  --material-edge: rgba(0, 0, 0, 0.08);
+  --scroll-fade: rgba(255, 255, 255, 0.6);
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.05);
+  --shadow-hero: 0 2px 4px rgba(0, 0, 0, 0.06), 0 14px 36px rgba(0, 0, 0, 0.12);
+  --shadow-chrome: 0 -6px 24px rgba(0, 0, 0, 0.08);
+  --shadow-header: 0 6px 20px rgba(0, 0, 0, 0.06);
+
   color-scheme: light;
 }
 
@@ -51,12 +119,16 @@
   --color-on-warn: var(--on-amber);
   --color-accent: var(--accent);
   --color-on-accent: var(--on-accent);
-  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, sans-serif;
 }
 
+/* ── Base ─────────────────────────────────────────────────────────────────── */
 html {
   font-size: 18px;
+  line-height: 1.5;
   -webkit-text-size-adjust: 100%;
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
 }
 html,
 body,
@@ -84,4 +156,197 @@ select {
 }
 .safe-top {
   padding-top: env(safe-area-inset-top);
+}
+
+/* Focus: keyboard only, one consistent ring. Unlayered so it beats outline-none. */
+:where(a, button, input, select, textarea, [role='radio'], [tabindex]):focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* ── Components ───────────────────────────────────────────────────────────── */
+@layer components {
+  /* Typography */
+  .t-title {
+    font-size: var(--text-title);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    font-weight: 800;
+    text-wrap: balance;
+  }
+  .t-hero {
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+  }
+  .t-label {
+    font-size: var(--text-sm);
+    line-height: 1.3;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .text-sm,
+  .text-xs {
+    letter-spacing: 0.01em;
+  }
+
+  /* Surfaces */
+  .card {
+    border-radius: var(--radius-lg);
+    border-color: var(--hairline);
+    box-shadow: var(--shadow-card);
+  }
+  .card-hero {
+    box-shadow: var(--shadow-hero);
+  }
+
+  /* Translucent chrome. Content scrolls under; a soft fade replaces the divider. */
+  .material-bar,
+  .material-header {
+    background: var(--material);
+    -webkit-backdrop-filter: saturate(180%) blur(var(--blur));
+    backdrop-filter: saturate(180%) blur(var(--blur));
+  }
+  .material-bar {
+    --blur: 24px;
+    box-shadow: var(--shadow-chrome), inset 0 1px 0 var(--material-edge);
+  }
+  .material-bar::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    bottom: 100%;
+    height: var(--space-6);
+    background: linear-gradient(to top, var(--scroll-fade), transparent);
+    pointer-events: none;
+  }
+  .material-header {
+    --blur: 20px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    padding-top: calc(env(safe-area-inset-top) + var(--space-4));
+    box-shadow: var(--shadow-header);
+  }
+  .material-header::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    top: 100%;
+    height: var(--space-4);
+    background: linear-gradient(to bottom, var(--scroll-fade), transparent);
+    pointer-events: none;
+  }
+
+  /* Press feedback: on press, not release. */
+  .press,
+  .press-fast,
+  .press-card {
+    transition: transform var(--dur-press) var(--ease-out);
+  }
+  .press-fast {
+    transition-duration: var(--dur-press-fast);
+  }
+  .press:active:not(:disabled),
+  .press-fast:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+  .press-card:active {
+    transform: scale(0.98);
+  }
+
+  /* Enter transitions. CSS transitions (not keyframes) so they stay interruptible. */
+  .enter {
+    transition:
+      opacity var(--dur-enter) var(--ease-out),
+      transform var(--dur-enter) var(--ease-out);
+  }
+  .panel-enter {
+    transform-origin: top center;
+    transition:
+      opacity var(--dur-panel) var(--ease-out),
+      transform var(--dur-panel) var(--ease-out);
+  }
+}
+
+@starting-style {
+  .enter {
+    opacity: 0;
+    transform: translateY(0.375rem);
+  }
+  .panel-enter {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+/* Hover only where there is a real pointer. Colour change, no transition. */
+@media (hover: hover) and (pointer: fine) {
+  .btn-secondary:hover:not(:disabled),
+  .chip:hover:not([aria-checked='true']):not(:disabled) {
+    background-color: var(--surface-raised);
+  }
+  .btn-ghost:hover:not(:disabled) {
+    background-color: var(--surface-2);
+  }
+}
+
+/* ── Accessibility preferences ────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .press,
+  .press-fast,
+  .press-card {
+    transition: opacity var(--dur-press-fast) ease-out;
+  }
+  .press:active:not(:disabled),
+  .press-fast:active:not(:disabled),
+  .press-card:active {
+    transform: none;
+    opacity: 0.7;
+  }
+  .enter,
+  .panel-enter {
+    transition: opacity var(--dur-enter) ease-out;
+  }
+  @starting-style {
+    .enter,
+    .panel-enter {
+      opacity: 0;
+      transform: none;
+    }
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .material-bar,
+  .material-header {
+    background: var(--bg);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .material-bar,
+  .material-header {
+    background: var(--bg);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .material-bar {
+    border-top: 2px solid var(--fg);
+  }
+  .material-header {
+    border-bottom: 2px solid var(--fg);
+  }
+  .material-bar::before,
+  .material-header::after {
+    display: none;
+  }
+  .card {
+    border-width: 2px;
+    border-color: var(--fg);
+    box-shadow: none;
+  }
 }
