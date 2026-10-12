@@ -110,7 +110,7 @@ export function PredictScreen() {
         <>
           <div className="mb-3 flex items-end justify-between gap-3">
             <div>
-              <div className="tabular text-4xl font-black leading-none">{fmtKmh(geo.speed)}</div>
+              <div className="t-hero tabular text-4xl font-black">{fmtKmh(geo.speed)}</div>
               <div className="mt-1 text-base text-muted">
                 {road?.name ?? ''} · {DIR_ARROW[shownDir]} {road ? directionLabel(road, chain, shownDir) : ''}
               </div>
@@ -129,7 +129,7 @@ export function PredictScreen() {
                 role="radio"
                 aria-checked={dirOverride === d}
                 onClick={() => setDirOverride(d)}
-                className={`min-h-11 rounded-xl border-2 font-bold ${dirOverride === d ? 'border-accent bg-accent text-on-accent' : 'border-line text-fg'}`}
+                className={`press chip min-h-11 rounded-xl border-2 font-bold ${dirOverride === d ? 'border-accent bg-accent text-on-accent' : 'border-line text-fg'}`}
               >
                 {d === 'auto' ? 'Auto dir' : d === 'fwd' ? '→ Fwd' : '← Rev'}
               </button>
@@ -148,7 +148,7 @@ export function PredictScreen() {
 
           {rest.length > 0 && (
             <div className="mt-4">
-              <h2 className="mb-2 text-sm font-bold uppercase tracking-wider text-muted">Then</h2>
+              <h2 className="mb-2 t-label">Then</h2>
               <div className="space-y-2">
                 {rest.map((r) => (
                   <SmallRow key={r.light.id} row={r} />
@@ -169,16 +169,16 @@ function FitProblem({ fit }: { fit: Fit }) {
 function NextCard({ row, moving }: { row: Row; moving: boolean }) {
   const { light, fit, now, arrival, distance, eta } = row;
   return (
-    <button type="button" onClick={() => navigate({ name: 'light', id: light.id })} className="block w-full text-left">
-      <Card className="border-2">
-        <div className="text-sm font-bold uppercase tracking-wider text-muted">Next light</div>
+    <button type="button" onClick={() => navigate({ name: 'light', id: light.id })} className="press-card block w-full text-left">
+      <Card className="card-hero border-2">
+        <div className="t-label">Next light</div>
         <div className="flex items-baseline justify-between gap-3">
-          <div className="min-w-0 text-3xl font-black leading-tight break-words">{light.name}</div>
-          {distance != null && <div className="tabular shrink-0 text-2xl font-black">{fmtDist(distance)}</div>}
+          <div className="t-hero min-w-0 text-3xl font-extrabold break-words">{light.name}</div>
+          {distance != null && <div className="t-hero tabular shrink-0 text-2xl font-black">{fmtDist(distance)}</div>}
         </div>
         <div className="mt-1 flex items-center justify-between gap-2">
           <ConfidenceBadge confidence={fit.confidence} status={fit.status} />
-          {eta != null && <span className="tabular text-lg font-bold text-muted">ETA {Math.round(eta)} s</span>}
+          {eta != null && <span className="tabular text-lg font-semibold text-muted">ETA {Math.round(eta)} s</span>}
         </div>
 
         {fit.status !== 'ok' || !now ? (
@@ -188,12 +188,12 @@ function NextCard({ row, moving }: { row: Row; moving: boolean }) {
         ) : (
           <>
             <div className="mt-4">
-              <div className="mb-1 text-sm font-bold uppercase tracking-wider text-muted">Right now</div>
+              <div className="mb-1 t-label">Right now</div>
               <StatePill state={now.state} big />
               <div className="tabular mt-2 text-2xl font-extrabold">{changeText(now)}</div>
             </div>
             <div className="mt-4 border-t-2 border-line pt-3">
-              <div className="mb-1 text-sm font-bold uppercase tracking-wider text-muted">When you arrive</div>
+              <div className="mb-1 t-label">When you arrive</div>
               {arrival ? (
                 <>
                   <StatePill state={arrival.state} big />
@@ -218,7 +218,7 @@ function NextCard({ row, moving }: { row: Row; moving: boolean }) {
 function SmallRow({ row }: { row: Row }) {
   const { light, fit, now, arrival, distance } = row;
   return (
-    <a href={href({ name: 'light', id: light.id })} className="block">
+    <a href={href({ name: 'light', id: light.id })} className="press-card block">
       <Card className="py-3">
         <div className="flex items-baseline justify-between gap-2">
           <span className="truncate text-lg font-extrabold">{light.name}</span>
