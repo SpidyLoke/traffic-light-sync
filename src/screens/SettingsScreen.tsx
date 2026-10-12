@@ -218,7 +218,7 @@ export function SettingsScreen() {
         </Button>
       </Section>
 
-      <p className="mt-6 text-center text-sm text-muted">Traffic Light Sync · device {data.deviceId.slice(0, 8)}</p>
+      <p className="mt-6 text-center text-sm text-muted">Traffic Light Sync · build {__BUILD__} · device {data.deviceId.slice(0, 8)}</p>
     </Screen>
   );
 }

@@ -2,16 +2,19 @@
 
 A mobile web app that predicts what the traffic lights ahead will be doing when you reach them, using timing taps you capture yourself. Solo proof of concept: no backend, no login. Everything lives in the phone's browser (IndexedDB).
 
-## Deploy (HTTPS, one step)
+## Hosting
 
-Phone browsers only allow GPS over HTTPS. Both of these give you HTTPS automatically.
+Live at **https://spidyloke.github.io/traffic-light-sync/** (GitHub Pages, HTTPS, which phone browsers require before they allow GPS).
 
-- **Vercel:** vercel.com → Add New → Project → import this repo → Deploy. Vite is auto-detected (`vercel.json` pins the settings).
-- **Netlify:** app.netlify.com → Add new site → Import an existing project → pick this repo → Deploy. `netlify.toml` sets the build.
+- `.github/workflows/ci.yml` runs on every push: `npm ci`, typecheck, unit tests, build. On the default branch it uploads `dist/` and deploys it to Pages.
+- One-time setup: repo Settings › Pages › Source: **GitHub Actions**.
+- To ship a change: push to the default branch. The site updates in about two minutes if CI is green. The app updates itself on next open; a hard refresh forces it.
+- Which build is live: the footer under More shows `version+commit`, e.g. `0.1.0+c753212`.
+- `base: './'` in `vite.config.ts` makes paths work under `/traffic-light-sync/`, and hash routing (`#/capture`) means no rewrite rules.
 
-Then open the URL on your phone, allow location, and use Share → **Add to Home Screen**. It runs full screen and works offline after the first load.
+On your phone, open the URL, allow location, then Share › **Add to Home Screen**. It runs full screen and works offline after the first load.
 
-Hash routing (`#/capture`, etc.) means no rewrite rules are needed on any static host.
+Vercel and Netlify also work unchanged (`vercel.json`, `netlify.toml`): build `npm run build`, publish `dist`.
 
 ## Run locally
 

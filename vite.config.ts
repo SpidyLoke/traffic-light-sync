@@ -33,5 +33,11 @@ export default defineConfig(({ mode }) => ({
     }),
   ],
   base: './',
+  // Shown under More so you can tell which build is live, e.g. 0.1.0+c753212.
+  define: {
+    __BUILD__: JSON.stringify(
+      `${process.env.npm_package_version ?? '0.0.0'}+${(process.env.GITHUB_SHA ?? 'local').slice(0, 7)}`,
+    ),
+  },
   test: { environment: 'node' },
 }));
