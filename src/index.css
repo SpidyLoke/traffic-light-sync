@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+/* Colour tokens. Dark is the default; "light" is a high-contrast sunlight mode. */
+:root {
+  --bg: #000000;
+  --surface: #121214;
+  --surface-2: #1f1f22;
+  --border: #3d3d42;
+  --fg: #ffffff;
+  --muted: #b8b8be;
+  --green: #30d158;
+  --on-green: #000000;
+  --red: #ff453a;
+  --on-red: #000000;
+  --amber: #ffd60a;
+  --on-amber: #000000;
+  --accent: #64d2ff;
+  --on-accent: #000000;
+  color-scheme: dark;
+}
+:root[data-theme='light'] {
+  --bg: #ffffff;
+  --surface: #f1f1f3;
+  --surface-2: #e2e2e6;
+  --border: #8a8a90;
+  --fg: #000000;
+  --muted: #2b2b30;
+  --green: #00802b;
+  --on-green: #ffffff;
+  --red: #c80f0f;
+  --on-red: #ffffff;
+  --amber: #8f5200;
+  --on-amber: #ffffff;
+  --accent: #0040c8;
+  --on-accent: #ffffff;
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--border);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-go: var(--green);
+  --color-on-go: var(--on-green);
+  --color-stop: var(--red);
+  --color-on-stop: var(--on-red);
+  --color-warn: var(--amber);
+  --color-on-warn: var(--on-amber);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+html {
+  font-size: 18px;
+  -webkit-text-size-adjust: 100%;
+}
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  background: var(--bg);
+  color: var(--fg);
+  margin: 0;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+button,
+a,
+input,
+select {
+  touch-action: manipulation;
+}
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
