@@ -85,7 +85,7 @@ export function LightsScreen() {
               key={r.id}
               type="button"
               onClick={() => setRoadId(r.id)}
-              className={`min-h-11 shrink-0 rounded-xl border-2 px-3 font-bold ${r.id === road?.id ? 'border-accent bg-accent text-on-accent' : 'border-line'}`}
+              className={`press chip min-h-11 shrink-0 rounded-xl border-2 px-3 font-bold ${r.id === road?.id ? 'border-accent bg-accent text-on-accent' : 'border-line'}`}
             >
               {r.name}
             </button>
@@ -94,7 +94,7 @@ export function LightsScreen() {
       )}
 
       {pending ? (
-        <Card className="mb-3 border-accent">
+        <Card className="panel-enter mb-3 border-accent">
           <Field label="Name this light" hint={`Pinned at GPS ±${Math.round(pending.fix.accuracy)} m`}>
             <input
               autoFocus
@@ -148,7 +148,7 @@ export function LightsScreen() {
                       onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
                     />
                   ) : (
-                    <a href={href({ name: 'light', id: l.id })} className="block truncate text-xl font-extrabold underline-offset-4 active:underline">
+                    <a href={href({ name: 'light', id: l.id })} className="press block truncate text-xl font-extrabold underline-offset-4 active:underline">
                       {l.name}
                     </a>
                   )}
@@ -189,7 +189,7 @@ export function LightsScreen() {
                     onClick={() =>
                       data.updateLights([{ id: l.id, patch: { directions: { ...l.directions, [d]: !l.directions[d] } } }])
                     }
-                    className={`min-h-10 rounded-lg border-2 px-2 font-bold ${l.directions[d] ? 'border-go text-go' : 'border-line text-muted line-through'}`}
+                    className={`press chip min-h-10 rounded-lg border-2 px-2 font-bold ${l.directions[d] ? 'border-go text-go' : 'border-line text-muted line-through'}`}
                   >
                     {DIR_ARROW[d]} {d === 'fwd' ? 'Fwd' : 'Rev'}
                   </button>
@@ -238,8 +238,8 @@ function RoadEditor({ road, chain }: { road: Road; chain: Light[] }) {
   const [open, setOpen] = useState(false);
   if (!open) {
     return (
-      <button type="button" onClick={() => setOpen(true)} className="mb-3 w-full text-left">
-        <div className="text-2xl font-black">{road.name}</div>
+      <button type="button" onClick={() => setOpen(true)} className="press-card mb-3 w-full text-left">
+        <div className="t-hero text-2xl font-extrabold">{road.name}</div>
         <div className="text-sm text-muted">
           → {directionLabel(road, chain, 'fwd')} · ← {directionLabel(road, chain, 'rev')} · <span className="text-accent underline">edit</span>
         </div>
@@ -247,7 +247,7 @@ function RoadEditor({ road, chain }: { road: Road; chain: Light[] }) {
     );
   }
   return (
-    <Card className="mb-3 space-y-3">
+    <Card className="panel-enter mb-3 space-y-3">
       <Field label="Road name">
         <input className={inputCls} defaultValue={road.name} onBlur={(e) => e.target.value.trim() && updateRoad(road.id, { name: e.target.value.trim() })} />
       </Field>

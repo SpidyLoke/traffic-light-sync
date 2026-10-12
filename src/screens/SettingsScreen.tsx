@@ -107,7 +107,7 @@ export function SettingsScreen() {
               key={t}
               type="button"
               onClick={() => set({ theme: t })}
-              className={`min-h-12 rounded-xl border-2 font-bold ${settings.theme === t ? 'border-accent bg-accent text-on-accent' : 'border-line'}`}
+              className={`press chip min-h-12 rounded-xl border-2 font-bold ${settings.theme === t ? 'border-accent bg-accent text-on-accent' : 'border-line'}`}
             >
               {t === 'dark' ? 'Dark' : 'Sunlight (light)'}
             </button>
@@ -134,7 +134,7 @@ export function SettingsScreen() {
               key={m}
               type="button"
               onClick={() => setImportMode(m)}
-              className={`min-h-11 rounded-xl border-2 text-sm font-bold ${importMode === m ? 'border-accent bg-accent text-on-accent' : 'border-line'}`}
+              className={`press chip min-h-11 rounded-xl border-2 text-sm font-bold ${importMode === m ? 'border-accent bg-accent text-on-accent' : 'border-line'}`}
             >
               {m === 'merge' ? 'Merge with existing' : 'Replace everything'}
             </button>
@@ -226,7 +226,7 @@ export function SettingsScreen() {
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="mb-5">
-      <h2 className="mb-2 text-sm font-bold uppercase tracking-wider text-muted">{title}</h2>
+      <h2 className="t-label mb-2">{title}</h2>
       <Card>{children}</Card>
     </section>
   );
@@ -240,7 +240,7 @@ function BandsEditor({ bands, onChange }: { bands: TimeBand[]; onChange: (b: Tim
       {bands.map((b) => (
         <div key={b.id} className="rounded-xl border-2 border-line p-3">
           {edit === b.id ? (
-            <div className="space-y-3">
+            <div className="panel-enter space-y-3">
               <Field label="Name">
                 <input className={inputCls} value={b.name} onChange={(e) => update(b.id, { name: e.target.value })} />
               </Field>
@@ -254,7 +254,7 @@ function BandsEditor({ bands, onChange }: { bands: TimeBand[]; onChange: (b: Tim
                           key={d}
                           type="button"
                           onClick={() => update(b.id, { days: on ? b.days.filter((x) => x !== i) : [...b.days, i].sort() })}
-                          className={`min-h-10 min-w-12 rounded-lg border-2 text-sm font-bold ${on ? 'border-accent bg-accent text-on-accent' : 'border-line'}`}
+                          className={`press chip min-h-10 min-w-12 rounded-lg border-2 text-sm font-bold ${on ? 'border-accent bg-accent text-on-accent' : 'border-line'}`}
                         >
                           {d}
                         </button>
@@ -287,7 +287,7 @@ function BandsEditor({ bands, onChange }: { bands: TimeBand[]; onChange: (b: Tim
               </div>
             </div>
           ) : (
-            <button type="button" className="block w-full text-left" onClick={() => setEdit(b.id)}>
+            <button type="button" className="press-card block w-full text-left" onClick={() => setEdit(b.id)}>
               <div className="text-lg font-bold">{b.name}</div>
               <div className="text-sm text-muted">{describeBand(b)}</div>
             </button>

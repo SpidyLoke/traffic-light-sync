@@ -60,7 +60,7 @@ export function LightDebugScreen({ id }: { id: string }) {
             key={d}
             type="button"
             onClick={() => setDir(d)}
-            className={`min-h-12 truncate rounded-xl border-2 px-2 font-bold ${dir === d ? 'border-accent bg-accent text-on-accent' : 'border-line'}`}
+            className={`press chip min-h-12 truncate rounded-xl border-2 px-2 font-bold ${dir === d ? 'border-accent bg-accent text-on-accent' : 'border-line'}`}
           >
             {DIR_ARROW[d]} {directionLabel(road, chain, d)}
           </button>
@@ -72,7 +72,7 @@ export function LightDebugScreen({ id }: { id: string }) {
             key={b.id}
             type="button"
             onClick={() => setBandId(b.id)}
-            className={`min-h-11 shrink-0 rounded-xl border-2 px-3 text-sm font-bold ${bandId === b.id ? 'border-accent bg-accent text-on-accent' : 'border-line'}`}
+            className={`press chip min-h-11 shrink-0 rounded-xl border-2 px-3 text-sm font-bold ${bandId === b.id ? 'border-accent bg-accent text-on-accent' : 'border-line'}`}
           >
             {b.name} <span className="opacity-70">({bandCount(b.id)})</span>
           </button>
@@ -119,7 +119,7 @@ export function LightDebugScreen({ id }: { id: string }) {
         </Card>
       )}
 
-      <h2 className="mt-5 mb-2 text-sm font-bold uppercase tracking-wider text-muted">Timeline ({shown.length})</h2>
+      <h2 className="t-label mt-5 mb-2">Timeline ({shown.length})</h2>
       <div className="space-y-1.5">
         {shown.map((o) => (
           <ObsRow key={o.id} o={o} d={detailById.get(o.id)} selected={selected === o.id} onSelect={() => setSelected(o.id)} />
@@ -379,7 +379,7 @@ function ObsRow({ o, d, selected, onSelect }: { o: Observation; d?: ObsDetail; s
           e.stopPropagation();
           if (confirm('Delete this observation?')) deleteObservation(o.id);
         }}
-        className="min-h-10 rounded-lg border-2 border-line px-2 text-sm font-bold text-muted"
+        className="press min-h-10 rounded-lg border-2 border-line px-2 text-sm font-bold text-muted"
         aria-label="Delete observation"
       >
         Del
