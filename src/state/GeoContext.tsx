@@ -74,7 +74,14 @@ export function GeoProvider({ children }: { children: ReactNode }) {
 
         // Speed: trust the GPS chip when it reports it, else derive from movement over ~3 s.
         let speed = fix.speed;
-        const older = recent.find((f) => now - f.at >= 2500);
+        let older: Fix | undefined;
+        for (let i = recent.length - 1; i >= 0; i--) {
+          const age = now - recent[i].at;
+          if (age >= 2500) {
+            if (age <= 8000) older = recent[i];
+            break;
+          }
+        }
         if (speed == null && older) {
           const d = distanceM(older, fix);
           speed = d > Math.max(older.accuracy, fix.accuracy) * 0.5 ? d / ((now - older.at) / 1000) : 0;

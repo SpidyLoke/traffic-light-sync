@@ -33,12 +33,14 @@ export function LightDebugScreen({ id }: { id: string }) {
     );
   }
   const road = roads.find((r) => r.id === light.roadId);
+  const activeBand =
+    bandId === ALL_BANDS || settings.bands.some((b) => b.id === bandId) ? bandId : bandFor(settings.bands, Date.now()).id;
   const chain = orderedLights(lights, light.roadId);
 
-  const fit: Fit = bandId === ALL_BANDS ? getCombinedFit(observations, light.id, dir, settings) : getFit(groups, light.id, dir, bandId, settings);
+  const fit: Fit = activeBand === ALL_BANDS ? getCombinedFit(observations, light.id, dir, settings) : getFit(groups, light.id, dir, activeBand, settings);
   const mine = observations.filter((o) => o.lightId === light.id);
   const shown = mine
-    .filter((o) => o.direction === dir && (bandId === ALL_BANDS || bandFor(settings.bands, o.t).id === bandId))
+    .filter((o) => o.direction === dir && (activeBand === ALL_BANDS || bandFor(settings.bands, o.t).id === activeBand))
     .sort((a, b) => b.t - a.t);
   const undirected = mine.filter((o) => !o.direction);
   const detailById = new Map(fit.details.map((d) => [d.id, d]));
@@ -72,7 +74,7 @@ export function LightDebugScreen({ id }: { id: string }) {
             key={b.id}
             type="button"
             onClick={() => setBandId(b.id)}
-            className={`press chip min-h-11 shrink-0 rounded-xl border-2 px-3 text-sm font-bold ${bandId === b.id ? 'border-accent bg-accent text-on-accent' : 'border-line'}`}
+            className={`press chip min-h-11 shrink-0 rounded-xl border-2 px-3 text-sm font-bold ${activeBand === b.id ? 'border-accent bg-accent text-on-accent' : 'border-line'}`}
           >
             {b.name} <span className="opacity-70">({bandCount(b.id)})</span>
           </button>
@@ -350,29 +352,29 @@ function ObsRow({ o, d, selected, onSelect }: { o: Observation; d?: ObsDetail; s
   const { deleteObservation } = useData();
   const isGreen = o.kind.endsWith('Green');
   return (
-    <div
-      onClick={onSelect}
-      className={`flex items-center gap-3 rounded-xl border-2 px-3 py-2 ${selected ? 'border-accent' : 'border-line'} bg-surface`}
-    >
-      <span
-        className={`size-4 shrink-0 rounded-full border-2 ${isGreen ? 'border-go' : 'border-stop'} ${
-          o.kind.startsWith('turned') ? (isGreen ? 'bg-go' : 'bg-stop') : ''
-        }`}
-        aria-hidden
-      />
-      <div className="min-w-0 flex-1">
-        <div className="text-base font-bold">{KIND_LABEL[o.kind]}</div>
-        <div className="tabular text-sm text-muted">
-          {fmtDateTime(o.t)} · {Math.round(o.distanceM)} m
-          {d ? ` · ${d.phase.toFixed(1)} s in` : ''}
-          {d?.residual != null ? ` · ${d.residual >= 0 ? '+' : ''}${d.residual.toFixed(2)} s` : ''}
-        </div>
-      </div>
-      {d && (
-        <span className={`text-lg font-black ${d.consistent ? 'text-go' : 'text-stop'}`} title={d.consistent ? 'Agrees' : 'Disagrees'}>
-          {d.consistent ? '✓' : '✗'}
+    <div className={`flex items-center gap-3 rounded-xl border-2 px-3 py-2 ${selected ? 'border-accent' : 'border-line'} bg-surface`}>
+      {/* Selecting a row is a real button so it works from the keyboard too. */}
+      <button type="button" onClick={onSelect} aria-pressed={selected} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+        <span
+          className={`size-4 shrink-0 rounded-full border-2 ${isGreen ? 'border-go' : 'border-stop'} ${
+            o.kind.startsWith('turned') ? (isGreen ? 'bg-go' : 'bg-stop') : ''
+          }`}
+          aria-hidden
+        />
+        <span className="block min-w-0 flex-1">
+          <span className="block text-base font-bold">{KIND_LABEL[o.kind]}</span>
+          <span className="tabular block text-sm text-muted">
+            {fmtDateTime(o.t)} · {Math.round(o.distanceM)} m
+            {d ? ` · ${d.phase.toFixed(1)} s in` : ''}
+            {d?.residual != null ? ` · ${d.residual >= 0 ? '+' : ''}${d.residual.toFixed(2)} s` : ''}
+          </span>
         </span>
-      )}
+        {d && (
+          <span className={`text-lg font-black ${d.consistent ? 'text-go' : 'text-stop'}`} title={d.consistent ? 'Agrees' : 'Disagrees'}>
+            {d.consistent ? '✓' : '✗'}
+          </span>
+        )}
+      </button>
       <button
         type="button"
         onClick={(e) => {

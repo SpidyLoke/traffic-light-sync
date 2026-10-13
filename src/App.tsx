@@ -26,6 +26,11 @@ export default function App() {
   const route = useRoute();
   const { ready, settings } = useData();
   const [dirOverride, setDirOverride] = useState<DirOverride>('auto');
+  const routeKey = route.name === 'light' ? `light/${route.id}` : route.name;
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [routeKey]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = settings.theme;

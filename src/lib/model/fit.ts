@@ -319,6 +319,9 @@ export function fitSignal(obs: FitObservation[], opt: FitOptions): Fit {
     alreadyRed: obs.filter((o) => o.kind === 'alreadyRed').length,
     total: obs.length,
   };
+  if (!(opt.minCycle < opt.maxCycle) || !(opt.step > 0)) {
+    return emptyFit('insufficient', 'Cycle search range is empty: set Min cycle below Max cycle under More.', counts);
+  }
   if (counts.turnedGreen < 2) {
     const need = 2 - counts.turnedGreen;
     return emptyFit(

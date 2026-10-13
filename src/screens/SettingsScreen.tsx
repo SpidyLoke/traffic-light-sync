@@ -178,8 +178,8 @@ export function SettingsScreen() {
             onChange={(v) => set({ reactionLagS: v })}
           />
           <div className="grid grid-cols-3 gap-2">
-            <NumberSetting label="Min cycle" value={settings.minCycleS} min={10} max={600} onChange={(v) => set({ minCycleS: v })} />
-            <NumberSetting label="Max cycle" value={settings.maxCycleS} min={20} max={900} onChange={(v) => set({ maxCycleS: v })} />
+            <NumberSetting label="Min cycle" value={settings.minCycleS} min={10} max={settings.maxCycleS - 1} onChange={(v) => set({ minCycleS: v })} />
+            <NumberSetting label="Max cycle" value={settings.maxCycleS} min={settings.minCycleS + 1} max={900} onChange={(v) => set({ maxCycleS: v })} />
             <NumberSetting label="Step" value={settings.cycleStepS} step={0.1} min={0.1} max={5} onChange={(v) => set({ cycleStepS: v })} />
           </div>
         </div>
