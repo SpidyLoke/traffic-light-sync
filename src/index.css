@@ -350,3 +350,42 @@ select {
     box-shadow: none;
   }
 }
+
+/* Capture: a ripple from the touch point confirms the tap was saved.
+   Each ripple is a fresh element, so a keyframe animation is fine here. */
+.tap-ripple {
+  position: absolute;
+  width: 14rem;
+  height: 14rem;
+  margin: -7rem 0 0 -7rem;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0;
+  pointer-events: none;
+  animation: tap-ripple 420ms var(--ease-out) forwards;
+}
+@keyframes tap-ripple {
+  from {
+    transform: scale(0.2);
+    opacity: 0.35;
+  }
+  to {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tap-ripple {
+    animation-name: tap-flash;
+    animation-duration: 300ms;
+    transform: scale(2);
+  }
+  @keyframes tap-flash {
+    from {
+      opacity: 0.3;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+}

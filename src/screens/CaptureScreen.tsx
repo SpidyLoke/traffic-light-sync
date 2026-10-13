@@ -2,6 +2,7 @@ import { useRef, useState, type PointerEvent } from 'react';
 import { useUi } from '../App';
 import { Button, Card, GpsBadge, Screen } from '../components/ui';
 import { fmtDist, fmtTime } from '../lib/format';
+import { haptic } from '../lib/haptics';
 import { directionAtLight, nearestLight, type DirSource } from '../lib/locate';
 import { DIR_ARROW, directionLabel, orderedLights } from '../lib/road';
 import { KIND_LABEL, type Direction, type ObservationKind } from '../lib/types';
@@ -41,6 +42,12 @@ export function CaptureScreen() {
   const [recent, setRecent] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const lastTap = useRef<{ kind: ObservationKind; t: number } | null>(null);
+  // A press only counts when the finger lifts without having scrolled or dragged away.
+  // Its time is still taken from the moment the finger went down.
+  const pending = useRef<{ kind: ObservationKind; pointerId: number; t: number; x: number; y: number } | null>(null);
+  const pads = useRef<Partial<Record<ObservationKind, HTMLButtonElement | null>>>({});
+  const [ripples, setRipples] = useState<{ id: number; kind: ObservationKind; x: number; y: number }[]>([]);
+  const rippleSeq = useRef(0);
 
   const { lights, roads, observations, settings } = data;
   const fix = geo.fix;
@@ -49,24 +56,47 @@ export function CaptureScreen() {
   const inRange = snap && snap.distance <= settings.snapRadiusM;
   const dirInfo = snap && fix ? directionAtLight(snap, fix, geo.heading, geo.headingAt, now, dirOverride) : null;
 
-  const tap = async (kind: ObservationKind, e: PointerEvent) => {
-    const t = eventTime(e);
+  const reject = (kind: ObservationKind, message: string) => {
+    haptic('error');
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    pads.current[kind]?.animate(
+      reduce
+        ? [{ opacity: 1 }, { opacity: 0.5 }, { opacity: 1 }]
+        : [
+            { transform: 'translateX(0)' },
+            { transform: 'translateX(-0.375rem)' },
+            { transform: 'translateX(0.375rem)' },
+            { transform: 'translateX(-0.25rem)' },
+            { transform: 'translateX(0)' },
+          ],
+      { duration: 280, easing: 'cubic-bezier(0.77, 0, 0.175, 1)' },
+    );
+    setError(message);
+  };
+
+  const confirmTap = (kind: ObservationKind, x: number, y: number) => {
+    haptic('success');
+    const id = ++rippleSeq.current;
+    setRipples((r) => [...r, { id, kind, x, y }]);
+  };
+
+  const tap = async (kind: ObservationKind, t: number, x: number, y: number) => {
     if (lastTap.current && lastTap.current.kind === kind && t - lastTap.current.t < 1200) return; // double tap
     lastTap.current = { kind, t };
-    if (!lights.length) return setError('No lights registered yet. Add them on the Lights tab first.');
+    if (!lights.length) return reject(kind, 'No lights registered yet. Add them on the Lights tab first.');
     const f = geo.fix;
-    if (!f || t - f.at > 10000) return setError('No recent GPS fix. Not saved.');
+    if (!f || t - f.at > 10000) return reject(kind, 'No recent GPS fix. Not saved.');
     const s = nearestLight(lights, roads, f);
-    if (!s) return setError('No lights registered yet.');
+    if (!s) return reject(kind, 'No lights registered yet.');
     if (s.distance > settings.snapRadiusM) {
-      navigator.vibrate?.([60, 60, 60]);
-      return setError(
+      return reject(
+        kind,
         `Too far from any light: nearest is ${s.light.name}, ${fmtDist(s.distance)} away (limit ${settings.snapRadiusM} m). Not saved.`,
       );
     }
     const d = directionAtLight(s, f, geo.heading, geo.headingAt, t, dirOverride);
     setError(null);
-    navigator.vibrate?.(35);
+    confirmTap(kind, x, y);
     const o = await data.addObservation({
       lightId: s.light.id,
       direction: d.dir,
@@ -140,12 +170,48 @@ export function CaptureScreen() {
           <button
             key={b.kind}
             type="button"
-            onPointerDown={(e) => tap(b.kind, e)}
+            ref={(el) => {
+              pads.current[b.kind] = el;
+            }}
+            onPointerDown={(e) => {
+              if (e.pointerType === 'mouse' && e.button !== 0) return;
+              const r = e.currentTarget.getBoundingClientRect();
+              pending.current = { kind: b.kind, pointerId: e.pointerId, t: eventTime(e), x: e.clientX - r.left, y: e.clientY - r.top };
+            }}
+            onPointerMove={(e) => {
+              const p = pending.current;
+              if (!p || p.pointerId !== e.pointerId) return;
+              const r = e.currentTarget.getBoundingClientRect();
+              if (Math.hypot(e.clientX - r.left - p.x, e.clientY - r.top - p.y) > 10) pending.current = null; // scrolling or dragging away
+            }}
+            onPointerCancel={() => (pending.current = null)}
+            onPointerUp={(e) => {
+              const p = pending.current;
+              pending.current = null;
+              if (p && p.pointerId === e.pointerId && p.kind === b.kind) tap(b.kind, p.t, p.x, p.y);
+            }}
+            onClick={(e) => {
+              // Keyboard activation (Enter/Space) arrives as a click with no pointer.
+              if (e.detail !== 0) return;
+              const r = e.currentTarget.getBoundingClientRect();
+              tap(b.kind, Date.now(), r.width / 2, r.height / 2);
+            }}
             onContextMenu={(e) => e.preventDefault()}
-            className={`flex select-none flex-col items-center justify-center press-fast rounded-3xl border-4 ${b.cls}`}
+            className={`relative flex select-none flex-col items-center justify-center overflow-hidden press-fast rounded-3xl border-4 ${b.cls}`}
           >
-            <span className="text-xl font-bold leading-tight">{b.title}</span>
-            <span className="t-hero text-4xl font-black">{b.sub}</span>
+            {ripples
+              .filter((r) => r.kind === b.kind)
+              .map((r) => (
+                <span
+                  key={r.id}
+                  aria-hidden
+                  className="tap-ripple"
+                  style={{ left: r.x, top: r.y }}
+                  onAnimationEnd={() => setRipples((rs) => rs.filter((x) => x.id !== r.id))}
+                />
+              ))}
+            <span className="relative text-xl font-bold leading-tight">{b.title}</span>
+            <span className="t-hero relative text-4xl font-black">{b.sub}</span>
           </button>
         ))}
       </div>
