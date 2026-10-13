@@ -1,8 +1,8 @@
-import { useRef, useState, type PointerEvent } from 'react';
+import { useEffect, useRef, useState, type PointerEvent } from 'react';
 import { useUi } from '../App';
 import { Button, Card, GpsBadge, Screen } from '../components/ui';
 import { fmtDist, fmtTime } from '../lib/format';
-import { haptic } from '../lib/haptics';
+import { feedback, prepareFeedback, type Outcome } from '../lib/feedback';
 import { directionAtLight, nearestLight, type DirSource } from '../lib/locate';
 import { DIR_ARROW, directionLabel, orderedLights } from '../lib/road';
 import { KIND_LABEL, type Direction, type ObservationKind } from '../lib/types';
@@ -48,6 +48,15 @@ export function CaptureScreen() {
   const pads = useRef<Partial<Record<ObservationKind, HTMLButtonElement | null>>>({});
   const [ripples, setRipples] = useState<{ id: number; kind: ObservationKind; x: number; y: number }[]>([]);
   const rippleSeq = useRef(0);
+  // Sound and haptics must run inside the tap's click event (iOS ignores them elsewhere),
+  // so the outcome decided on release is held here until that click arrives.
+  const outcome = useRef<Outcome | null>(null);
+  const flushFeedback = () => {
+    if (outcome.current) feedback(outcome.current);
+    outcome.current = null;
+  };
+
+  useEffect(prepareFeedback, []);
 
   const { lights, roads, observations, settings } = data;
   const fix = geo.fix;
@@ -56,8 +65,8 @@ export function CaptureScreen() {
   const inRange = snap && snap.distance <= settings.snapRadiusM;
   const dirInfo = snap && fix ? directionAtLight(snap, fix, geo.heading, geo.headingAt, now, dirOverride) : null;
 
-  const reject = (kind: ObservationKind, message: string) => {
-    haptic('error');
+  const reject = (kind: ObservationKind, message: string, result: Outcome) => {
+    outcome.current = result;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     pads.current[kind]?.animate(
       reduce
@@ -75,7 +84,7 @@ export function CaptureScreen() {
   };
 
   const confirmTap = (kind: ObservationKind, x: number, y: number) => {
-    haptic('success');
+    outcome.current = 'accepted';
     const id = ++rippleSeq.current;
     setRipples((r) => [...r, { id, kind, x, y }]);
   };
@@ -83,15 +92,16 @@ export function CaptureScreen() {
   const tap = async (kind: ObservationKind, t: number, x: number, y: number) => {
     if (lastTap.current && lastTap.current.kind === kind && t - lastTap.current.t < 1200) return; // double tap
     lastTap.current = { kind, t };
-    if (!lights.length) return reject(kind, 'No lights registered yet. Add them on the Lights tab first.');
+    if (!lights.length) return reject(kind, 'No lights registered yet. Add them on the Lights tab first.', 'error');
     const f = geo.fix;
-    if (!f || t - f.at > 10000) return reject(kind, 'No recent GPS fix. Not saved.');
+    if (!f || t - f.at > 10000) return reject(kind, 'No recent GPS fix. Not saved.', 'error');
     const s = nearestLight(lights, roads, f);
-    if (!s) return reject(kind, 'No lights registered yet.');
+    if (!s) return reject(kind, 'No lights registered yet.', 'error');
     if (s.distance > settings.snapRadiusM) {
       return reject(
         kind,
         `Too far from any light: nearest is ${s.light.name}, ${fmtDist(s.distance)} away (limit ${settings.snapRadiusM} m). Not saved.`,
+        'declined',
       );
     }
     const d = directionAtLight(s, f, geo.heading, geo.headingAt, t, dirOverride);
@@ -174,6 +184,7 @@ export function CaptureScreen() {
               pads.current[b.kind] = el;
             }}
             onPointerDown={(e) => {
+              outcome.current = null;
               if (e.pointerType === 'mouse' && e.button !== 0) return;
               const r = e.currentTarget.getBoundingClientRect();
               pending.current = { kind: b.kind, pointerId: e.pointerId, t: eventTime(e), x: e.clientX - r.left, y: e.clientY - r.top };
@@ -192,9 +203,11 @@ export function CaptureScreen() {
             }}
             onClick={(e) => {
               // Keyboard activation (Enter/Space) arrives as a click with no pointer.
-              if (e.detail !== 0) return;
-              const r = e.currentTarget.getBoundingClientRect();
-              tap(b.kind, Date.now(), r.width / 2, r.height / 2);
+              if (e.detail === 0) {
+                const r = e.currentTarget.getBoundingClientRect();
+                tap(b.kind, Date.now(), r.width / 2, r.height / 2);
+              }
+              flushFeedback();
             }}
             onContextMenu={(e) => e.preventDefault()}
             className={`relative flex select-none flex-col items-center justify-center overflow-hidden press-fast rounded-3xl border-4 ${b.cls}`}
