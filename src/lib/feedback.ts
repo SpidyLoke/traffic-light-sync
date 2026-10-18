@@ -37,8 +37,9 @@ function haptic(outcome: Outcome) {
 }
 
 // ── Sound ────────────────────────────────────────────────────────────────────
-// Played through an <audio> element, which iOS does not mute with the silent switch
-// (Web Audio would be muted). Tones are synthesised once into small WAV files.
+// Played through Web Audio in the "ambient" audio session, so it mixes with music or
+// navigation already playing instead of pausing it. The trade-off: on iPhone the
+// ring/silent switch mutes ambient sounds. Tones are synthesised once into buffers.
 
 type Wave = 'sine' | 'triangle' | 'square';
 interface Note {
@@ -66,64 +67,61 @@ const SOUNDS: Record<Outcome, Note[]> = {
   ],
 };
 
-const RATE = 22050;
-
-function render(notes: Note[]): Blob {
-  const total = notes.reduce((n, x) => n + Math.round(((x.ms + (x.gap ?? 0)) / 1000) * RATE), 0);
-  const pcm = new Int16Array(total);
+function render(ctx: AudioContext, notes: Note[]): AudioBuffer {
+  const rate = ctx.sampleRate;
+  const total = notes.reduce((n, x) => n + Math.round(((x.ms + (x.gap ?? 0)) / 1000) * rate), 0);
+  const buf = ctx.createBuffer(1, total, rate);
+  const out = buf.getChannelData(0);
   let pos = 0;
   for (const n of notes) {
-    const len = Math.round((n.ms / 1000) * RATE);
-    const attack = Math.round(0.004 * RATE);
+    const len = Math.round((n.ms / 1000) * rate);
+    const attack = Math.round(0.004 * rate);
     for (let i = 0; i < len; i++) {
-      const ph = ((i * n.freq) / RATE) % 1;
+      const ph = ((i * n.freq) / rate) % 1;
       const s = n.wave === 'sine' ? Math.sin(2 * Math.PI * ph) : n.wave === 'triangle' ? 1 - 4 * Math.abs(ph - 0.5) : ph < 0.5 ? 0.6 : -0.6;
       const env = i < attack ? i / attack : Math.exp((-5 * (i - attack)) / len);
-      pcm[pos + i] = Math.round(s * env * 0.8 * 32767);
+      out[pos + i] = s * env * 0.8;
     }
-    pos += len + Math.round(((n.gap ?? 0) / 1000) * RATE);
+    pos += len + Math.round(((n.gap ?? 0) / 1000) * rate);
   }
-  const buf = new ArrayBuffer(44 + pcm.byteLength);
-  const v = new DataView(buf);
-  const str = (o: number, t: string) => [...t].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
-  str(0, 'RIFF');
-  v.setUint32(4, 36 + pcm.byteLength, true);
-  str(8, 'WAVE');
-  str(12, 'fmt ');
-  v.setUint32(16, 16, true);
-  v.setUint16(20, 1, true); // PCM
-  v.setUint16(22, 1, true); // mono
-  v.setUint32(24, RATE, true);
-  v.setUint32(28, RATE * 2, true);
-  v.setUint16(32, 2, true);
-  v.setUint16(34, 16, true);
-  str(36, 'data');
-  v.setUint32(40, pcm.byteLength, true);
-  new Int16Array(buf, 44).set(pcm);
-  return new Blob([buf], { type: 'audio/wav' });
+  return buf;
 }
 
-const players: Partial<Record<Outcome, HTMLAudioElement>> = {};
+let ctx: AudioContext | null = null;
+const buffers: Partial<Record<Outcome, AudioBuffer>> = {};
 
-function player(outcome: Outcome): HTMLAudioElement {
-  let a = players[outcome];
-  if (!a) {
-    a = new Audio(URL.createObjectURL(render(SOUNDS[outcome])));
-    a.preload = 'auto';
-    players[outcome] = a;
-  }
-  return a;
+function audio(): AudioContext | null {
+  if (ctx) return ctx;
+  const AC = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (!AC) return null;
+  // Safari 16.4+: say explicitly that these sounds should mix with other audio.
+  const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
+  if (session) session.type = 'ambient';
+  ctx = new AC();
+  return ctx;
+}
+
+function buffer(outcome: Outcome): AudioBuffer | null {
+  const c = audio();
+  if (!c) return null;
+  return (buffers[outcome] ??= render(c, SOUNDS[outcome]));
 }
 
 function sound(outcome: Outcome) {
-  const a = player(outcome);
-  a.currentTime = 0;
-  a.play().catch(() => {});
+  const c = audio();
+  const b = buffer(outcome);
+  if (!c || !b) return;
+  // Resuming inside the tap's click event is what unlocks audio on iPhone.
+  if (c.state !== 'running') c.resume().catch(() => {});
+  const src = c.createBufferSource();
+  src.buffer = b;
+  src.connect(c.destination);
+  src.start();
 }
 
-/** Create the audio files ahead of the first tap so it plays without delay. */
+/** Build the sounds ahead of the first tap so it plays without delay. */
 export function prepareFeedback() {
-  (Object.keys(SOUNDS) as Outcome[]).forEach(player);
+  (Object.keys(SOUNDS) as Outcome[]).forEach(buffer);
 }
 
 export function feedback(outcome: Outcome) {
