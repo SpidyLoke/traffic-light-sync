@@ -156,6 +156,8 @@ export function PredictScreen() {
               </div>
             </div>
           )}
+          {/* Room for the capture strip that sits above the tab bar on this screen. */}
+          <div aria-hidden className="h-28 shrink-0" />
         </>
       )}
     </Screen>

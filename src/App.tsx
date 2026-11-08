@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { CaptureDock } from './components/CaptureDock';
 import type { DirOverride } from './lib/locate';
 import { href, useRoute, type Route } from './router';
 import { CaptureScreen } from './screens/CaptureScreen';
@@ -11,8 +12,11 @@ import { useData } from './state/DataContext';
 interface Ui {
   dirOverride: DirOverride;
   setDirOverride(d: DirOverride): void;
+  /** Ids of this session's latest taps, newest first, shared by Capture and Predict. */
+  recent: string[];
+  pushRecent(id: string): void;
 }
-const UiCtx = createContext<Ui>({ dirOverride: 'auto', setDirOverride: () => {} });
+const UiCtx = createContext<Ui>({ dirOverride: 'auto', setDirOverride: () => {}, recent: [], pushRecent: () => {} });
 export const useUi = () => useContext(UiCtx);
 
 const TABS: { route: Route; label: string; icon: string }[] = [
@@ -26,6 +30,8 @@ export default function App() {
   const route = useRoute();
   const { ready, settings } = useData();
   const [dirOverride, setDirOverride] = useState<DirOverride>('auto');
+  const [recent, setRecent] = useState<string[]>([]);
+  const pushRecent = useCallback((id: string) => setRecent((r) => [id, ...r].slice(0, 5)), []);
   const routeKey = route.name === 'light' ? `light/${route.id}` : route.name;
 
   useEffect(() => {
@@ -41,7 +47,7 @@ export default function App() {
 
   const active = route.name === 'light' ? 'lights' : route.name;
   return (
-    <UiCtx.Provider value={{ dirOverride, setDirOverride }}>
+    <UiCtx.Provider value={{ dirOverride, setDirOverride, recent, pushRecent }}>
       <main className="min-h-full">
         {route.name === 'predict' && <PredictScreen />}
         {route.name === 'capture' && <CaptureScreen />}
@@ -50,6 +56,7 @@ export default function App() {
         {route.name === 'settings' && <SettingsScreen />}
       </main>
       <nav className="material-bar fixed inset-x-0 bottom-0 z-20 safe-bottom">
+        {route.name === 'predict' && <CaptureDock />}
         <div className="mx-auto grid max-w-xl grid-cols-4">
           {TABS.map((t) => {
             const on = t.route.name === active;
